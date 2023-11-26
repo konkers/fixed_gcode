@@ -1,0 +1,48 @@
+on:
+  push:
+    branches:
+      - main
+      - 'releases/**'
+  pull_request:
+
+name: Rust `no_std` Continuous integration
+
+jobs:
+  test:
+    name: Check `no_std`
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:  
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: "clippy,rustfmt"
+      - name: check
+        run: cargo check --no-default-features
+
+  build:
+    name: Build `no_std`
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:  
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: "clippy,rustfmt"
+      -
+        run: cargo build --no-default-features
+
+  clippy:
+    name: Clippy `no_std`
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:  
+          submodules: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: "clippy,rustfmt"
+      - 
+        run: cargo clippy --no-default-features -- -D warnings
