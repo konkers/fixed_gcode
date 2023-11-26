@@ -1,6 +1,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use core::{ops::Deref, str::FromStr};
+use core::{fmt::Display, ops::Deref, str::FromStr};
 
 use fixed::traits::{FixedSigned, ToFixed};
 use heapless::Vec;
@@ -15,7 +15,7 @@ pub enum Error {
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Word<Value: FixedSigned> {
     pub letter: char,
     pub value: Value,
@@ -27,6 +27,16 @@ impl<Value: FixedSigned> Word<Value> {
             letter,
             value: value.to_fixed(),
         }
+    }
+
+    pub const fn lit(letter: char, value: Value) -> Self {
+        Self { letter, value }
+    }
+}
+
+impl<Value: FixedSigned> Display for Word<Value> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "{}{}", self.letter, self.value)
     }
 }
 
@@ -44,7 +54,7 @@ pub trait BufferTypes<Value: FixedSigned> {
     type Words: Default + Deref<Target = [Word<Value>]> + TryPush<Word<Value>> + core::fmt::Debug;
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Line<Value: FixedSigned, Types: BufferTypes<Value>> {
     pub words: Types::Words,
 }
@@ -54,6 +64,14 @@ impl<Value: FixedSigned, Types: BufferTypes<Value>> Line<Value, Types> {
         Self {
             words: Default::default(),
         }
+    }
+
+    pub fn command(&self) -> Option<&Word<Value>> {
+        self.words.get(0)
+    }
+
+    pub fn arguments(&self) -> impl Iterator<Item = &Word<Value>> {
+        self.words.iter().skip(1)
     }
 }
 
